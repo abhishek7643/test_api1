@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Your Email — API Studio{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'app.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrap">
+    <div class="auth-card panel-card">
+        <div class="auth-card-header text-center">
+            <div class="brand justify-content-center">
+                <span class="logo" style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%);display:inline-flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 14px rgba(99,102,241,0.45);margin-bottom:0.75rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
+                    </svg>
+                </span>
+            </div>
+            <h4 style="color:var(--text-main,#f8fafc);font-weight:700;margin-bottom:0.25rem;">Check your email</h4>
+            <p class="subtitle" style="color:var(--text-muted,#94a3b8);font-size:0.9rem;">We sent a verification link to your inbox</p>
+        </div>
+
+        <div class="auth-card-body">
+            <div class="p-3 mb-3 rounded" style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);color:var(--text-main,#f8fafc);font-size:0.92rem;line-height:1.6;">
+                {% if email %}
+                    A verification link was sent to <strong style="color:#a5b4fc;">{{ email }}</strong>.
+                {% else %}
+                    A verification link was sent to your registered email address.
+                {% endif %}
+                Please click the link inside to activate your account and start using API Studio.
+            </div>
+
+            {% if debug %}
+                <div class="p-2 mb-3 rounded" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#fde047;font-size:0.8rem;">
+                    <strong>Local Dev Tip:</strong> Using the console backend. Check your server terminal/console to view the verification link.
+                </div>
+            {% endif %}
+
+            <div class="d-grid gap-2 mt-4">
+                <a href="{% url 'accounts:login' %}" class="btn btn-primary" style="padding:0.75rem 1rem;font-weight:700;">Proceed to Sign in</a>
+                <a href="{% url 'accounts:resend_verification' %}" class="btn btn-outline-secondary" style="padding:0.6rem 1rem;font-weight:600;font-size:0.9rem;">Resend Verification Link</a>
+            </div>
+        </div>
+
+        <div class="auth-card-footer text-center" style="font-size:0.85rem;color:var(--text-muted,#94a3b8);">
+            Did not receive anything? Check your spam/junk folder or request another link above.
+        </div>
+    </div>
+</div>
+{% endblock %}
