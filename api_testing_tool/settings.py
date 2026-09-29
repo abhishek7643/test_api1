@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,38 +76,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'api_testing_tool.wsgi.application'
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'api_testing_tool'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+if os.getenv('DB_NAME') and os.getenv('DB_USER') and os.getenv('DB_PASSWORD'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST', ''),
+            'PORT': os.getenv('DB_PORT', ''),
+        }
     }
-}
-
-_db_url = os.getenv('DATABASE_URL')
-if _db_url:
+elif os.getenv('DATABASE_URL'):
     import dj_database_url
-    DATABASES['default'] = dj_database_url.parse(_db_url, conn_max_age=600)
+    DATABASES = {
+        'default': dj_database_url.parse(os.getenv('DATABASE_URL'), conn_max_age=600)
+    }
 else:
-    try:
-        import psycopg2
-        _pg_test = psycopg2.connect(
-            dbname=DATABASES['default']['NAME'],
-            user=DATABASES['default']['USER'],
-            password=DATABASES['default']['PASSWORD'],
-            host=DATABASES['default']['HOST'],
-            port=DATABASES['default']['PORT'],
-            connect_timeout=2,
-        )
-        _pg_test.close()
-    except Exception:
-        DATABASES['default'] = {
+    DATABASES = {
+        'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -124,6 +116,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

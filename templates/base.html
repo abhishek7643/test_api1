@@ -252,6 +252,9 @@
             border-radius: var(--radius-md);
             border: 1px solid;
         }
+        .custom-alert-success { background: var(--success-soft); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+        .custom-alert-danger { background: var(--danger-soft); color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+        .custom-alert-info { background: var(--info-soft); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
 
         /* ===== Toast / messages ===== */
         .main-shell {
@@ -409,7 +412,7 @@
     {% if messages %}
         <div class="mb-3 d-grid gap-2">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm" role="alert" style="background:{% if 'success' in message.tags %}var(--success-soft);color:#6ee7b7;border-color:rgba(16,185,129,0.3);{% elif 'error' in message.tags or 'danger' in message.tags %}var(--danger-soft);color:#fca5a5;border-color:rgba(239,68,68,0.3);{% else %}var(--info-soft);color:#93c5fd;border-color:rgba(59,130,246,0.3);{% endif %}">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm {% if 'success' in message.tags %}custom-alert-success{% elif 'error' in message.tags or 'danger' in message.tags %}custom-alert-danger{% else %}custom-alert-info{% endif %}" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
