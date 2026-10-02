@@ -27,9 +27,14 @@ def _env_list(name, default=None, sep=','):
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fallback-change-me')
 
-DEBUG = _env_bool('DJANGO_DEBUG', True)
+DEBUG = _env_bool('DJANGO_DEBUG', False)
+
+if not DEBUG and SECRET_KEY == 'django-insecure-fallback-change-me':
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in production environments.")
 
 ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
+CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS', [])
 
 
 INSTALLED_APPS = [
@@ -68,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.clerk_context',
             ],
         },
     },
@@ -76,7 +82,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'api_testing_tool.wsgi.application'
 
 
-if os.getenv('DB_NAME') and os.getenv('DB_USER') and os.getenv('DB_PASSWORD'):
+if os.getenv('DATABASE_URL'):
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(os.getenv('DATABASE_URL'), conn_max_age=600, ssl_require=True)
+    }
+elif os.getenv('DB_NAME') and os.getenv('DB_USER') and os.getenv('DB_PASSWORD'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -87,11 +98,9 @@ if os.getenv('DB_NAME') and os.getenv('DB_USER') and os.getenv('DB_PASSWORD'):
             'PORT': os.getenv('DB_PORT', ''),
         }
     }
-elif os.getenv('DATABASE_URL'):
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(os.getenv('DATABASE_URL'), conn_max_age=600)
-    }
+elif not DEBUG:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("Database configuration missing. You must provide DATABASE_URL or DB_NAME/DB_USER/DB_PASSWORD in production.")
 else:
     DATABASES = {
         'default': {
@@ -114,6 +123,14 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# Production Security Headers & Cookies
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -126,11 +143,17 @@ LOGIN_URL = '/accounts/login/'
 
 PROXY_TIMEOUT = int(os.getenv('PROXY_TIMEOUT', '30'))
 
+# Clerk Configuration
+CLERK_PUBLISHABLE_KEY = os.getenv('CLERK_PUBLISHABLE_KEY', '')
+CLERK_SECRET_KEY = os.getenv('CLERK_SECRET_KEY', '')
+CLERK_JWKS_URL = os.getenv('CLERK_JWKS_URL', '')
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.ClerkAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
@@ -146,6 +169,7 @@ EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', True)
 EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', False)
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'API Studio <noreply@localhost>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Test API <noreply@localhost>')
 EMAIL_VERIFICATION_TIMEOUT = int(os.getenv('EMAIL_VERIFICATION_TIMEOUT', '86400'))
+
 

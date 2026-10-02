@@ -4,7 +4,6 @@ from django.urls import path
 
 from .views import about
 
-@login_required
 def index(request):
     return render(request, 'core/index.html', {})
 

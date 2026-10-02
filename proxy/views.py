@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,7 +10,7 @@ from proxy.services import execute_request
 
 
 class ProxyExecuteView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = ProxyExecuteRequestSerializer(data=request.data)
@@ -29,6 +29,7 @@ class ProxyExecuteView(APIView):
                 {
                     'ok': False,
                     'status_code': status.HTTP_400_BAD_REQUEST,
+                    'status_text': 'Bad Request',
                     'error_type': 'validation_error',
                     'error_message': first_error or 'Invalid request data',
                     'errors': errors,
@@ -54,16 +55,24 @@ class ProxyExecuteView(APIView):
             result = {
                 'ok': False,
                 'status_code': None,
+                'status_text': 'Execution Error',
                 'response_time_ms': None,
-                'headers': None,
-                'body_text': None,
-                'content_type': None,
+                'response_size_bytes': 0,
+                'headers': {},
+                'cookies': [],
+                'body_text': '',
+                'content_type': '',
                 'error_type': 'execution_error',
                 'error_message': str(e),
+                'is_truncated': False,
             }
 
+        clerk_id = getattr(request, 'clerk_user_id', '') or ''
+        user = request.user if request.user and request.user.is_authenticated else None
+
         history_kwargs = dict(
-            user=request.user,
+            user=user,
+            clerk_user_id=clerk_id,
             method=data['method'],
             url=data['url'],
             params_json=data.get('params', {}) or {},
@@ -71,10 +80,12 @@ class ProxyExecuteView(APIView):
             body_json=data.get('body', '') or '',
             auth_type=data.get('auth_type', 'none') or 'none',
             auth_config_json=data.get('auth_config', {}) or {},
-            status_code=result['status_code'],
-            response_time_ms=result['response_time_ms'],
-            error_type=result['error_type'] or '',
-            error_message=result['error_message'] or '',
+            status_code=result.get('status_code'),
+            response_time_ms=result.get('response_time_ms'),
+            response_size_bytes=result.get('response_size_bytes', 0),
+            response_headers_json=result.get('headers', {}) or {},
+            error_type=result.get('error_type') or '',
+            error_message=result.get('error_message') or '',
         )
         try:
             RequestHistory.objects.create(**history_kwargs)

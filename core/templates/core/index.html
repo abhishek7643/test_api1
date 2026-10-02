@@ -1,445 +1,500 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'app.css' %}">
-{% endblock %}
-
 {% block content %}
-<div class="app-grid">
-    <!-- Sidebar -->
-    <aside class="sidebar d-none d-lg-block">
-        <div class="sidebar-inner">
-            <div class="mb-3">
-                <button type="button" class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2" id="newRequestBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
-                    New Request
+<div class="app-container">
+    <!-- ============================================================
+         LEFT SIDEBAR (ZERO-OVERLAP SEGMENTED TABS ARCHITECTURE)
+         ============================================================ -->
+    <aside class="sidebar-panel">
+        <div class="sidebar-header">
+            <button type="button" class="btn-new-request" id="newTabBtn" title="Create a new request tab">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
+                </svg>
+                <span>New Request</span>
+            </button>
+
+            <!-- Navigation Tabs for Sidebar Sections -->
+            <div class="sidebar-nav-tabs" role="tablist">
+                <button type="button" class="s-nav-tab active" data-tab-target="tabCollections">Collections</button>
+                <button type="button" class="s-nav-tab" data-tab-target="tabSaved">Saved</button>
+                <button type="button" class="s-nav-tab" data-tab-target="tabHistory">History</button>
+                <button type="button" class="s-nav-tab" data-tab-target="tabEnv">Env</button>
+            </div>
+        </div>
+
+        <!-- Collections View Area -->
+        <div class="sidebar-content-area" id="tabCollections">
+            <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:0.04em;">My Collections (<span id="collectionsTotalCount">0</span>)</span>
+                <button type="button" class="mini-icon-btn" id="createCollectionBtn" title="Create Collection">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
                 </button>
             </div>
-
-            <div class="panel-group" id="sidebarAccordion">
-                <div class="panel-item">
-                    <div class="panel-head">
-                        <button class="panel-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCollections" aria-expanded="true" aria-controls="collapseCollections">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="color:var(--accent-hover)"><path d="M1 7.5a1.5 1.5 0 0 1 1.5-1.5h3a.5.5 0 0 0 .354-.146L7.207 3H13.5A1.5 1.5 0 0 1 15 4.5v1.764a2 2 0 0 1-1.106.79L8.56 9.383a1 1 0 0 0-.553.894V13.5A1.5 1.5 0 0 1 6.5 15h-4A1.5 1.5 0 0 1 1 13.5v-6z"/><path d="M2.5 5a.5.5 0 0 1-.5-.5V3a1 1 0 0 1 1-1h5.293L10 4.707A.5.5 0 0 1 9.646 5.5H2.5z"/></svg>
-                            <strong>Collections</strong>
-                        </button>
-                        <div class="panel-head-actions">
-                            <span class="count-chip" id="collectionsCount">0</span>
-                            <button type="button" class="icon-btn" id="addCollectionBtn" title="Add Collection" aria-label="Add collection">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="collapseCollections" class="panel-body collapse show" data-bs-parent="#sidebarAccordion">
-                        <div class="list-viewport" id="collectionsList"></div>
-                    </div>
-                </div>
-
-                <div class="panel-item">
-                    <div class="panel-head">
-                        <button class="panel-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSaved" aria-expanded="true" aria-controls="collapseSaved">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="color:#f0abfc"><path d="M2 10.5a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 6 10.5v4A1.5 1.5 0 0 1 4.5 16h-1A1.5 1.5 0 0 1 2 14.5v-4zm6-5a1.5 1.5 0 0 1 1.5-1.5h1A1.5 1.5 0 0 1 12 5.5v9A1.5 1.5 0 0 1 10.5 16h-1A1.5 1.5 0 0 1 8 14.5v-9zM4 3.5A1.5 1.5 0 0 1 5.5 2h1A1.5 1.5 0 0 1 8 3.5v7.836c-.313.08-.61.235-.854.453L5.56 14.298c-.55.493-1.353.496-1.906.005a1.5 1.5 0 0 1-.353-1.068V3.5z"/></svg>
-                            <strong>Saved</strong>
-                        </button>
-                        <div class="panel-head-actions">
-                            <span class="count-chip" id="savedCount">0</span>
-                        </div>
-                    </div>
-                    <div id="collapseSaved" class="panel-body collapse show" data-bs-parent="#sidebarAccordion">
-                        <div class="list-viewport" id="savedList"></div>
-                    </div>
-                </div>
-
-                <div class="panel-item">
-                    <div class="panel-head">
-                        <button class="panel-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHistory" aria-expanded="true" aria-controls="collapseHistory">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="color:#fbbf24"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466zM8.5 7a.5.5 0 0 0-1 0v2.5a.5.5 0 0 0 .146.354l1.5 1.5a.5.5 0 0 0 .708-.708L8.5 9.293V7z"/></svg>
-                            <strong>History</strong>
-                        </button>
-                        <div class="panel-head-actions">
-                            <span class="count-chip" id="historyCount">0</span>
-                            <button type="button" class="icon-btn danger" id="clearHistoryBtn" title="Clear History" aria-label="Clear history">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="collapseHistory" class="panel-body collapse show" data-bs-parent="#sidebarAccordion">
-                        <div class="list-viewport" id="historyList"></div>
-                    </div>
+            <div id="collectionsListContainer" class="d-flex flex-column gap-1">
+                <div class="empty-state-box">
+                    <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <div class="empty-state-title">No Collections</div>
+                    <div class="empty-state-desc">Group requests together to test and document your APIs.</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Saved Requests View Area -->
+        <div class="sidebar-content-area" id="tabSaved" style="display:none;">
+            <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:0.04em;">Saved Requests (<span id="savedTotalCount">0</span>)</span>
+            </div>
+            <div id="savedListContainer" class="d-flex flex-column gap-1">
+                <div class="empty-state-box">
+                    <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    <div class="empty-state-title">No Saved Requests</div>
+                    <div class="empty-state-desc">Click Save on any request to store it here.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History View Area -->
+        <div class="sidebar-content-area" id="tabHistory" style="display:none;">
+            <div class="history-filter-bar">
+                <input type="text" class="history-filter-input" id="historySearchInput" placeholder="Filter history...">
+                <button type="button" class="mini-icon-btn danger" id="clearHistoryBtn" title="Clear all history">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="historyListContainer" class="d-flex flex-column gap-1">
+                <div class="empty-state-box">
+                    <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="empty-state-title">No History Yet</div>
+                    <div class="empty-state-desc">Sent requests will automatically appear here.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environments Sidebar Area -->
+        <div class="sidebar-content-area" id="tabEnv" style="display:none;">
+            <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:0.04em;">Environments</span>
+                <button type="button" class="mini-icon-btn" id="createEnvSidebarBtn" title="Create Environment">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="environmentsListContainer" class="d-flex flex-column gap-1"></div>
         </div>
     </aside>
 
-    <!-- Main workspace -->
-    <section class="workspace">
-        <div class="d-lg-none mb-3">
-            <button class="btn btn-secondary w-100 d-inline-flex align-items-center justify-content-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12A.5.5 0 0 1 3 11.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
-                Open Sidebar
+    <!-- ============================================================
+         MAIN WORKSPACE: REQUEST TABS + BUILDER + RESPONSE VIEWER
+         ============================================================ -->
+    <main class="workspace-container">
+        <!-- Horizontal Tabs Bar -->
+        <div class="request-tabs-strip" id="requestTabsContainer">
+            <!-- Tabs dynamically injected here -->
+            <button type="button" class="btn-add-tab" id="addNewTabBtn" title="New Tab (Ctrl+T)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/>
+                </svg>
             </button>
         </div>
 
-        <!-- ===== Request Builder Panel ===== -->
-        <div class="panel-card request-panel">
-            <!-- Request Bar -->
-            <div class="request-bar">
-                <div class="method-field">
-                    <select class="form-select form-select-lg method-select" id="methodSelect">
-                        <option value="GET" class="m-opt-get">GET</option>
-                        <option value="POST" class="m-opt-post">POST</option>
-                        <option value="PUT" class="m-opt-put">PUT</option>
-                        <option value="PATCH" class="m-opt-patch">PATCH</option>
-                        <option value="DELETE" class="m-opt-del">DELETE</option>
+        <div class="workspace-content">
+            <!-- Primary Request Bar Card -->
+            <section class="request-bar-card">
+                <div class="request-bar-row">
+                    <!-- Method Dropdown -->
+                    <select class="method-dropdown-btn" id="reqMethodSelect">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="HEAD">HEAD</option>
+                        <option value="OPTIONS">OPTIONS</option>
                     </select>
-                </div>
-                <div class="url-field">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="url-icon"><path fill-rule="evenodd" d="M8.146 4.646a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 5.707V12.5a.5.5 0 0 1-1 0V5.707L5.854 7.354a.5.5 0 1 1-.708-.708z"/><path fill-rule="evenodd" d="M4 4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1h2v4h-2v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9H2V5h2V4zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H6z"/></svg>
-                    <input type="text" class="form-control url-input" id="urlInput" placeholder="https://api.example.com/endpoint" spellcheck="false" autocomplete="off">
-                </div>
-                <div class="request-bar-actions">
-                    <button type="button" class="btn btn-primary send-btn" id="sendBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.86L.117 6.86a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11zM6.636 10.07l2.762 4.225L14.094 1.41 6.636 10.07zM1.4 5.829l4.86 3.174L13.19 2.13 1.4 5.83z"/></svg>
-                        Send
+
+                    <!-- URL Input Box -->
+                    <div class="url-input-container">
+                        <input type="text" class="url-input-box" id="reqUrlInput" placeholder="https://api.example.com/v1/users or {{BASE_URL}}/users" spellcheck="false" autocomplete="off">
+                    </div>
+
+                    <!-- Save Request Button -->
+                    <button type="button" class="btn-save-request" id="reqSaveBtn" title="Save Request (Ctrl+S)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.414a1 1 0 0 0-.293-.707L10.293.293A1 1 0 0 0 9.586 0H2zm9.5 2h-1V6.5a.5.5 0 0 1-1 0V3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V4.5h-.5a1 1 0 0 1-1-1zM3 4a1 1 0 0 1 1-1h1v4a.5.5 0 0 1-1 0V4z"/>
+                        </svg>
+                        <span>Save</span>
                     </button>
-                    <button type="button" class="btn btn-secondary save-btn" id="saveBtn" data-bs-toggle="modal" data-bs-target="#saveModal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.414a1 1 0 0 0-.293-.707L10.293.293A1 1 0 0 0 9.586 0H2zm9.5 2h-1V6.5a.5.5 0 0 1-1 0V3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V4.5h-.5a1 1 0 0 1-1-1zM3 4a1 1 0 0 1 1-1h1v4a.5.5 0 0 1-1 0V4z"/></svg>
-                        Save
+
+                    <!-- Send Request Button -->
+                    <button type="button" class="btn-send" id="reqSendBtn" title="Send Request (Ctrl+Enter)">
+                        <svg id="sendBtnIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.86L.117 6.86a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11zM6.636 10.07l2.762 4.225L14.094 1.41 6.636 10.07zM1.4 5.829l4.86 3.174L13.19 2.13 1.4 5.83z"/>
+                        </svg>
+                        <span id="sendBtnText">Send</span>
                     </button>
                 </div>
-            </div>
 
-            <!-- URL Preview -->
-            <div class="url-preview-wrap">
-                <div class="url-preview-label">Request URL</div>
-                <div class="url-preview-box">
-                    <input type="text" class="form-control url-preview-input" id="urlPreview" readonly placeholder="Request URL with parameters will appear here">
+                <!-- Resolved Live Preview Bar -->
+                <div class="resolved-preview-bar">
+                    <span class="resolved-preview-badge">Preview</span>
+                    <span class="resolved-preview-url" id="resolvedUrlPreview">Enter an API endpoint URL above</span>
                 </div>
-            </div>
+            </section>
 
-            <!-- Builder Tabs -->
-            <div class="tabs-wrap">
-                <ul class="nav nav-tabs" id="builderTabs" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" id="tabParamsTab" data-bs-toggle="tab" data-bs-target="#tabParams" type="button" role="tab" aria-controls="tabParams" aria-selected="true">Params</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="tabHeadersTab" data-bs-toggle="tab" data-bs-target="#tabHeaders" type="button" role="tab" aria-controls="tabHeaders" aria-selected="false">Headers</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="tabBodyTab" data-bs-toggle="tab" data-bs-target="#tabBody" type="button" role="tab" aria-controls="tabBody" aria-selected="false">Body</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="tabAuthTab" data-bs-toggle="tab" data-bs-target="#tabAuth" type="button" role="tab" aria-controls="tabAuth" aria-selected="false">Auth</button>
-                    </li>
-                </ul>
+            <!-- Request Configuration Tabs Card -->
+            <section class="builder-card">
+                <nav class="builder-tabs-nav" role="tablist">
+                    <button type="button" class="builder-tab-btn active" data-target="paneParams">Params <span class="builder-tab-count" id="paramsCountBadge">0</span></button>
+                    <button type="button" class="builder-tab-btn" data-target="paneHeaders">Headers <span class="builder-tab-count" id="headersCountBadge">0</span></button>
+                    <button type="button" class="builder-tab-btn" data-target="paneBody">Body</button>
+                    <button type="button" class="builder-tab-btn" data-target="paneAuth">Auth</button>
+                    <button type="button" class="builder-tab-btn" data-target="paneTests">Tests</button>
+                </nav>
 
-                <div class="tab-content" id="builderTabsContent">
-                    <!-- Params -->
-                    <div class="tab-pane fade show active" id="tabParams" role="tabpanel" aria-labelledby="tabParamsTab">
-                        <div class="kvtable-wrap">
-                            <table class="kv-table" id="paramsTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width:40px"></th>
-                                        <th style="width:35%">Key</th>
-                                        <th>Value</th>
-                                        <th style="width:40px"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="paramsBody"></tbody>
-                            </table>
+                <!-- Params Pane -->
+                <div class="builder-tab-pane active" id="paneParams">
+                    <table class="kv-table" id="paramsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;"></th>
+                                <th style="width:35%;">Key</th>
+                                <th>Value</th>
+                                <th style="width:36px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="paramsTableBody"></tbody>
+                    </table>
+                    <div class="add-row-bar">
+                        <button type="button" class="btn-add-row" id="addParamRowBtn">+ Add Parameter</button>
+                    </div>
+                </div>
+
+                <!-- Headers Pane -->
+                <div class="builder-tab-pane" id="paneHeaders">
+                    <table class="kv-table" id="headersTable">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;"></th>
+                                <th style="width:35%;">Key</th>
+                                <th>Value</th>
+                                <th style="width:36px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="headersTableBody"></tbody>
+                    </table>
+                    <div class="add-row-bar">
+                        <button type="button" class="btn-add-row" id="addHeaderRowBtn">+ Add Header</button>
+                    </div>
+                </div>
+
+                <!-- Body Pane -->
+                <div class="builder-tab-pane" id="paneBody">
+                    <div class="body-toolbar">
+                        <div class="body-types-group">
+                            <span class="body-type-chip active" data-body-type="json">JSON</span>
+                            <span class="body-type-chip" data-body-type="form-data">Form Data</span>
+                            <span class="body-type-chip" data-body-type="x-www-form-urlencoded">URL-Encoded</span>
+                            <span class="body-type-chip" data-body-type="raw">Raw</span>
                         </div>
-                        <div class="add-row-bar">
-                            <button type="button" class="add-row-link" id="addParamBtn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-                                Add Parameter
-                            </button>
+                        <div class="body-tools-group">
+                            <button type="button" class="body-tool-btn" id="formatJsonBtn" title="Pretty format JSON">Prettify</button>
+                            <button type="button" class="body-tool-btn" id="minifyJsonBtn" title="Minify JSON">Minify</button>
+                            <button type="button" class="body-tool-btn" id="validateJsonBtn" title="Validate JSON syntax">Validate</button>
+                            <button type="button" class="body-tool-btn" id="clearBodyBtn">Clear</button>
                         </div>
                     </div>
+                    <textarea class="code-editor-area" id="reqBodyTextarea" spellcheck="false" placeholder='{\n  "key": "value"\n}'></textarea>
+                </div>
 
-                    <!-- Headers -->
-                    <div class="tab-pane fade" id="tabHeaders" role="tabpanel" aria-labelledby="tabHeadersTab">
-                        <div class="kvtable-wrap">
-                            <table class="kv-table" id="headersTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width:40px"></th>
-                                        <th style="width:35%">Key</th>
-                                        <th>Value</th>
-                                        <th style="width:40px"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="headersBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="add-row-bar">
-                            <button type="button" class="add-row-link" id="addHeaderBtn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-                                Add Header
-                            </button>
-                        </div>
+                <!-- Auth Pane -->
+                <div class="builder-tab-pane" id="paneAuth">
+                    <div class="auth-type-cards">
+                        <span class="auth-type-pill active" data-auth="none">No Auth</span>
+                        <span class="auth-type-pill" data-auth="bearer">Bearer Token</span>
+                        <span class="auth-type-pill" data-auth="api_key">API Key</span>
+                        <span class="auth-type-pill" data-auth="basic">Basic Auth</span>
+                        <span class="auth-type-pill" data-auth="oauth2">OAuth 2.0</span>
                     </div>
 
-                    <!-- Body -->
-                    <div class="tab-pane fade" id="tabBody" role="tabpanel" aria-labelledby="tabBodyTab">
-                        <div class="body-head-row">
-                            <div class="d-inline-flex align-items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16" style="color:#a78bfa"><path fill-rule="evenodd" d="M1.114 8.063V7.9c1.005-.102 1.497-.615 1.497-1.6V4.503c0-1.094.39-1.538 1.354-1.538h.273V2h-.376C2.628 2 2 2.69 2 4.499V6.3c0 .918-.608 1.313-1 1.438v.358c.392.126 1 .52 1 1.438v1.801C2 11.311 2.628 12 3.862 12h.376v-.964h-.273c-.964 0-1.354-.444-1.354-1.539V9.524c0-.964-.492-1.477-1.497-1.461ZM14.886 7.936v.164c-.99-.084-1.497-.598-1.497-1.461V4.503c0-1.095-.39-1.539-1.354-1.539h-.273V2h.376C13.372 2 14 2.69 14 4.499V6.3c0 .918.608 1.313 1 1.438v.358c-.392.126-1 .52-1 1.438v1.801C14 11.311 13.372 12 12.138 12h-.376v-.964h.273c.964 0 1.354-.444 1.354-1.539V9.524c0-.964.492-1.477 1.497-1.588ZM8 2.5a1 1 0 0 1 .98.832l.4 2.012a1 1 0 0 0 .754.754l2.012.4a1 1 0 0 1 0 1.974l-2.012.4a1 1 0 0 0-.754.754l-.4 2.012a1 1 0 0 1-1.974 0l-.4-2.012a1 1 0 0 0-.754-.754l-2.012-.4a1 1 0 0 1 0-1.974l2.012-.4a1 1 0 0 0 .754-.754l.4-2.012A1 1 0 0 1 8 2.5Z"/></svg>
-                                <span class="panel-title">JSON Body</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span class="soft-badge" id="bodyDisabledNote" style="display:none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
-                                    Disabled for GET/DELETE
-                                </span>
-                                <button type="button" class="ghost-btn" id="validateJsonBtn">Validate JSON</button>
-                                <span class="msg-inline small" id="jsonValidateMsg"></span>
+                    <div id="authConfigContainer" class="auth-config-box">
+                        <div id="authSecNone">
+                            <span class="text-muted small">This request does not use any authorization headers or parameters.</span>
+                        </div>
+                        <div id="authSecBearer" style="display:none;">
+                            <div class="form-field-group">
+                                <label class="form-field-label">Token</label>
+                                <input type="password" class="kv-input" id="authBearerToken" placeholder="Paste Bearer token here">
                             </div>
                         </div>
-                        <textarea class="form-control mono-font body-textarea" id="bodyTextarea" rows="10" spellcheck="false" placeholder='{"key": "value"}'></textarea>
-                        <div class="hint-text">Body is sent for POST, PUT, PATCH methods only.</div>
-                    </div>
-
-                    <!-- Auth -->
-                    <div class="tab-pane fade" id="tabAuth" role="tabpanel" aria-labelledby="tabAuthTab">
-                        <div class="auth-block">
-                            <div class="section-title">Auth Type</div>
-                            <div class="auth-type-grid">
-                                <label class="auth-chip">
-                                    <input type="radio" name="authType" id="authNone" value="none" checked>
-                                    <span>None</span>
-                                </label>
-                                <label class="auth-chip">
-                                    <input type="radio" name="authType" id="authBearer" value="bearer">
-                                    <span>Bearer Token</span>
-                                </label>
-                                <label class="auth-chip">
-                                    <input type="radio" name="authType" id="authApiKey" value="api_key">
-                                    <span>API Key</span>
-                                </label>
-                                <label class="auth-chip">
-                                    <input type="radio" name="authType" id="authBasic" value="basic">
-                                    <span>Basic Auth</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div id="authConfigNone" class="auth-config-block" style="margin-top:0.75rem">
-                            <div class="soft-info">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
-                                No authentication will be sent with this request.
-                            </div>
-                        </div>
-
-                        <div id="authConfigBearer" class="auth-config-block" style="display:none">
-                            <div class="field-block">
-                                <label class="form-label" for="bearerToken">Token</label>
-                                <input type="text" class="form-control" id="bearerToken" placeholder="Paste your Bearer token">
-                            </div>
-                        </div>
-
-                        <div id="authConfigApiKey" class="auth-config-block" style="display:none">
-                            <div class="row g-3">
+                        <div id="authSecApiKey" style="display:none;">
+                            <div class="row g-2">
                                 <div class="col-md-5">
-                                    <div class="field-block">
-                                        <label class="form-label" for="apiKeyName">Key Name</label>
-                                        <input type="text" class="form-control" id="apiKeyName" placeholder="e.g. X-API-Key">
+                                    <div class="form-field-group">
+                                        <label class="form-field-label">Key</label>
+                                        <input type="text" class="kv-input" id="authApiKeyName" placeholder="e.g. X-API-Key">
                                     </div>
                                 </div>
                                 <div class="col-md-5">
-                                    <div class="field-block">
-                                        <label class="form-label" for="apiKeyValue">Value</label>
-                                        <input type="text" class="form-control" id="apiKeyValue" placeholder="API key value">
+                                    <div class="form-field-group">
+                                        <label class="form-field-label">Value</label>
+                                        <input type="password" class="kv-input" id="authApiKeyValue" placeholder="Value">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="field-block">
-                                        <label class="form-label" for="apiKeyAddTo">Add To</label>
-                                        <select class="form-select" id="apiKeyAddTo">
+                                    <div class="form-field-group">
+                                        <label class="form-field-label">Add To</label>
+                                        <select class="kv-input" id="authApiKeyLocation">
                                             <option value="header">Header</option>
-                                            <option value="query">Query</option>
+                                            <option value="query">Query Params</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div id="authConfigBasic" class="auth-config-block" style="display:none">
-                            <div class="row g-3">
+                        <div id="authSecBasic" style="display:none;">
+                            <div class="row g-2">
                                 <div class="col-md-6">
-                                    <div class="field-block">
-                                        <label class="form-label" for="basicUsername">Username</label>
-                                        <input type="text" class="form-control" id="basicUsername" placeholder="Username">
+                                    <div class="form-field-group">
+                                        <label class="form-field-label">Username</label>
+                                        <input type="text" class="kv-input" id="authBasicUser" placeholder="Username">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="field-block">
-                                        <label class="form-label" for="basicPassword">Password</label>
-                                        <input type="password" class="form-control" id="basicPassword" placeholder="Password">
+                                    <div class="form-field-group">
+                                        <label class="form-field-label">Password</label>
+                                        <input type="password" class="kv-input" id="authBasicPass" placeholder="Password">
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div id="authSecOAuth2" style="display:none;">
+                            <div class="form-field-group">
+                                <label class="form-field-label">Access Token</label>
+                                <input type="password" class="kv-input" id="authOAuth2Token" placeholder="OAuth 2.0 Access Token">
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Tests Pane (Assertions) -->
+                <div class="builder-tab-pane" id="paneTests">
+                    <div class="d-flex flex-column gap-2">
+                        <span class="text-muted small">Automatic assertions run against the response:</span>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="testAssertStatus200" checked>
+                            <label class="form-check-label small" for="testAssertStatus200">Status code is 200 OK</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="testAssertTimeFast" checked>
+                            <label class="form-check-label small" for="testAssertTimeFast">Response time is under 1000ms</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="testAssertJsonValid" checked>
+                            <label class="form-check-label small" for="testAssertJsonValid">Response body is valid JSON</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Response Section -->
+            <section class="response-card">
+                <div class="response-header-bar">
+                    <div class="resp-meta-left">
+                        <span class="status-badge s-none" id="respStatusBadge">No Response</span>
+                        <span class="stat-pill" id="respTimeChip" style="display:none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+                            <span id="respTimeValue">0</span> ms
+                        </span>
+                        <span class="stat-pill" id="respSizeChip" style="display:none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/></svg>
+                            <span id="respSizeValue">0</span> B
+                        </span>
+                    </div>
+
+                    <div class="resp-nav-tabs">
+                        <button type="button" class="resp-tab-btn active" data-resp-target="respPaneBody">Body</button>
+                        <button type="button" class="resp-tab-btn" data-resp-target="respPaneHeaders">Headers (<span id="respHeadersCount">0</span>)</button>
+                        <button type="button" class="resp-tab-btn" data-resp-target="respPaneCookies">Cookies (<span id="respCookiesCount">0</span>)</button>
+                        <button type="button" class="resp-tab-btn" data-resp-target="respPaneTests">Test Results (<span id="respTestsCount">0</span>)</button>
+                        <button type="button" class="body-tool-btn ms-2" id="copyResponseBodyBtn" title="Copy response body">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Response Body Pane -->
+                <div class="resp-content-pane active" id="respPaneBody">
+                    <div id="respErrorBanner" class="error-banner" style="display:none;"></div>
+                    <pre class="response-body-pre" id="responseBodyPre"><span class="text-muted">Send a request to inspect the response.</span></pre>
+                </div>
+
+                <!-- Response Headers Pane -->
+                <div class="resp-content-pane" id="respPaneHeaders">
+                    <table class="kv-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30%;">Header</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="responseHeadersBody">
+                            <tr><td colspan="2" class="text-muted text-center p-3">No headers received yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Response Cookies Pane -->
+                <div class="resp-content-pane" id="respPaneCookies">
+                    <table class="kv-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>Domain</th>
+                                <th>Path</th>
+                                <th>Secure</th>
+                            </tr>
+                        </thead>
+                        <tbody id="responseCookiesBody">
+                            <tr><td colspan="5" class="text-muted text-center p-3">No cookies received.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Response Test Results Pane -->
+                <div class="resp-content-pane" id="respPaneTests">
+                    <div id="responseTestsContainer" class="d-flex flex-column gap-2">
+                        <span class="text-muted small">Run a request to see test results.</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- ============================================================
+     SAVE REQUEST MODAL
+     ============================================================ -->
+<div class="modal fade app-modal" id="saveRequestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body d-flex flex-column gap-3">
+                <div class="form-field-group">
+                    <label class="form-field-label">Request Name</label>
+                    <input type="text" class="kv-input" id="saveModalReqName" placeholder="e.g. List Active Users">
+                </div>
+                <div class="form-field-group">
+                    <label class="form-field-label">Collection</label>
+                    <select class="kv-input" id="saveModalCollectionSelect">
+                        <option value="">(No collection - Save to root)</option>
+                        <option value="__new__">+ Create New Collection...</option>
+                    </select>
+                </div>
+                <div class="form-field-group" id="saveModalNewCollectionGroup" style="display:none;">
+                    <label class="form-field-label">New Collection Name</label>
+                    <input type="text" class="kv-input" id="saveModalNewCollectionName" placeholder="e.g. Users Service">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary" id="confirmSaveRequestBtn" style="background:var(--accent);border-color:var(--accent);">Save</button>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- ===== Response Panel ===== -->
-        <div class="panel-card response-panel" id="responseCard">
-            <div class="response-head">
-                <div class="d-inline-flex align-items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="color:#93c5fd"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.586l4.767 4.767a1 1 0 0 0 1.414 0L15 4.586V4a1 1 0 0 0-1-1H2Zm0 3.414V12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6.414l-4.586 4.586a2 2 0 0 1-2.828 0L2 6.414Z"/></svg>
-                    <span class="panel-title-strong">Response</span>
-                </div>
-
-                <div class="response-meta">
-                    <span class="status-pill s-none" id="statusPill">No Response</span>
-                    <span class="time-chip" id="timeChip" style="display:none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
-                        <span id="timeChipValue">0</span> ms
-                    </span>
-                </div>
-
-                <ul class="nav nav-tabs response-tabs ms-auto" id="responseTabs">
-                    <li class="nav-item">
-                        <button class="nav-link active" id="respBodyTabTab" data-bs-toggle="tab" data-bs-target="#respBodyTab" type="button" role="tab" aria-controls="respBodyTab" aria-selected="true">Body</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="respHeadersTabTab" data-bs-toggle="tab" data-bs-target="#respHeadersTab" type="button" role="tab" aria-controls="respHeadersTab" aria-selected="false">Headers</button>
-                    </li>
-                </ul>
+<!-- ============================================================
+     CREATE / EDIT COLLECTION MODAL
+     ============================================================ -->
+<div class="modal fade app-modal" id="collectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="collectionModalTitle">Create Collection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body d-flex flex-column gap-3">
+                <input type="hidden" id="collectionModalId">
+                <div class="form-field-group">
+                    <label class="form-field-label">Name</label>
+                    <input type="text" class="kv-input" id="collectionModalName" placeholder="e.g. Authentication API">
+                </div>
+                <div class="form-field-group">
+                    <label class="form-field-label">Description (optional)</label>
+                    <textarea class="kv-input" id="collectionModalDesc" rows="2" placeholder="Describe endpoints in this collection"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary" id="confirmCollectionSaveBtn" style="background:var(--accent);border-color:var(--accent);">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            <div class="response-body">
-                <div class="error-box" id="responseError" style="display:none"></div>
-                <div class="tab-content" style="padding:0;background:transparent;border:none;">
-                    <div class="tab-pane fade show active" id="respBodyTab" role="tabpanel" aria-labelledby="respBodyTabTab">
-                        <pre class="mono-font response-pre" id="responseBody"><span class="pre-placeholder">Response body will appear here.</span></pre>
+<!-- ============================================================
+     ENVIRONMENT MANAGER MODAL
+     ============================================================ -->
+<div class="modal fade app-modal" id="environmentManagerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Environments & Variables</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body d-flex flex-column gap-3">
+                <div class="row">
+                    <!-- Environment List Left -->
+                    <div class="col-md-4 border-end" style="border-color:var(--border-subtle)!important;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-muted text-uppercase">Environments</span>
+                            <button type="button" class="mini-icon-btn" id="modalAddEnvBtn" title="Add Environment">+</button>
+                        </div>
+                        <div class="d-flex flex-column gap-1" id="modalEnvList"></div>
                     </div>
-                    <div class="tab-pane fade" id="respHeadersTab" role="tabpanel" aria-labelledby="respHeadersTabTab">
-                        <div class="kvtable-wrap">
-                            <table class="kv-table" id="responseHeadersTable">
+
+                    <!-- Variables Table Right -->
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-muted text-uppercase">Variables (<span id="modalActiveEnvName">None</span>)</span>
+                            <button type="button" class="btn-add-row" id="modalAddVarRowBtn">+ Add Variable</button>
+                        </div>
+                        <div style="max-height:300px;overflow-y:auto;">
+                            <table class="kv-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:30%">Key</th>
+                                        <th>Variable Key</th>
                                         <th>Value</th>
+                                        <th style="width:40px;">Secret</th>
+                                        <th style="width:36px;"></th>
                                     </tr>
                                 </thead>
-                                <tbody id="responseHeadersBody">
-                                    <tr><td colspan="2" class="empty-row">No headers yet.</td></tr>
+                                <tbody id="modalEnvVariablesBody">
+                                    <tr><td colspan="4" class="text-muted text-center p-3">Select or create an environment to manage variables.</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
-
-<!-- Mobile sidebar offcanvas -->
-<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-label="Mobile sidebar">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title d-inline-flex align-items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" style="color:var(--accent-hover)"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
-            Sidebar
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <div class="mb-3">
-            <button type="button" class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2" id="newRequestBtnMobile">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z"/></svg>
-                New Request
-            </button>
-        </div>
-        <div id="mobileSidebarContent"></div>
-    </div>
-</div>
-
-<!-- Save Modal -->
-<div class="modal fade" id="saveModal" tabindex="-1" aria-labelledby="saveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="saveModalLabel">Save Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label" for="saveRequestName">Request Name</label>
-                    <input type="text" class="form-control" id="saveRequestName" placeholder="e.g. Get Users List">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="saveCollectionSelect">Collection</label>
-                    <select class="form-select" id="saveCollectionSelect">
-                        <option value="">-- Select Collection --</option>
-                        <option value="__new__">(new collection)</option>
-                    </select>
-                </div>
-                <div class="mb-3" id="newCollectionGroup" style="display:none">
-                    <label class="form-label" for="newCollectionName">New Collection Name</label>
-                    <input type="text" class="form-control" id="newCollectionName" placeholder="e.g. My Project">
-                </div>
-            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveConfirmBtn">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Saved Request Modal -->
-<div class="modal fade" id="editSavedModal" tabindex="-1" aria-labelledby="editSavedModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSavedModalLabel">Edit Saved Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="editSavedId">
-                <div class="mb-3">
-                    <label class="form-label" for="editSavedName">Name</label>
-                    <input type="text" class="form-control" id="editSavedName">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="editSavedCollection">Collection</label>
-                    <select class="form-select" id="editSavedCollection">
-                        <option value="">-- None --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="editSavedConfirmBtn">Update</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Collection Modal -->
-<div class="modal fade" id="editCollectionModal" tabindex="-1" aria-labelledby="editCollectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editCollectionModalLabel">Edit Collection</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="editCollectionId">
-                <div class="mb-3">
-                    <label class="form-label" for="editCollectionName">Name</label>
-                    <input type="text" class="form-control" id="editCollectionName">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="editCollectionConfirmBtn">Update</button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

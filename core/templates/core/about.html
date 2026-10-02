@@ -16,9 +16,7 @@
         font-weight: 800;
         letter-spacing: -0.03em;
         margin-bottom: 1rem;
-        background: linear-gradient(135deg, #fff 0%, #a5abc0 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--text-primary);
     }
 
     .about-hero-subtitle {
@@ -34,12 +32,12 @@
     }
 
     .feature-card {
-        background-color: var(--bg-surface-2);
+        background-color: var(--bg-surface);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-lg);
         padding: 2rem;
         height: 100%;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
         position: relative;
         overflow: hidden;
     }
@@ -48,16 +46,15 @@
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, var(--accent) 0%, #a855f7 100%);
+        background: var(--accent);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.25s ease;
     }
 
     .feature-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-4px);
         box-shadow: var(--shadow-md);
         border-color: var(--border-strong);
-        background-color: var(--bg-surface-3);
     }
 
     .feature-card:hover::before {
@@ -69,7 +66,7 @@
         height: 48px;
         border-radius: var(--radius-md);
         background-color: var(--accent-soft);
-        color: var(--accent-hover);
+        color: var(--accent);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -78,7 +75,7 @@
     }
 
     .feature-card h3 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 700;
         margin-bottom: 1rem;
         color: var(--text-primary);
@@ -87,7 +84,7 @@
     .feature-card p {
         color: var(--text-secondary);
         font-size: 0.95rem;
-        line-height: 1.5;
+        line-height: 1.55;
         margin-bottom: 0;
     }
     
@@ -108,8 +105,8 @@
     }
 
     .mission-banner {
-        background: linear-gradient(135deg, var(--bg-surface-3) 0%, var(--bg-elevated) 100%);
-        border: 1px solid var(--border-strong);
+        background: var(--bg-surface-2);
+        border: 1px solid var(--border-subtle);
         border-radius: var(--radius-xl);
         padding: 3rem 2rem;
         text-align: center;
@@ -118,6 +115,7 @@
 
     .mission-banner h2 {
         font-weight: 800;
+        color: var(--text-primary);
         margin-bottom: 1rem;
     }
 
@@ -126,7 +124,7 @@
         font-size: 1.05rem;
         max-width: 700px;
         margin: 0 auto 2rem;
-        line-height: 1.6;
+        line-height: 1.65;
     }
 </style>
 {% endblock %}
