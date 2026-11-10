@@ -31,6 +31,10 @@ class SSRFProtectionError(ValueError):
 def is_ssrf_safe_ip(ip_str):
     try:
         ip = ipaddress.ip_address(ip_str)
+        # Handle Well-Known NAT64 prefix (64:ff9b::/96) by checking the embedded IPv4
+        if isinstance(ip, ipaddress.IPv6Address) and ip in ipaddress.IPv6Network('64:ff9b::/96'):
+            ipv4 = ipaddress.IPv4Address(ip.packed[-4:])
+            return is_ssrf_safe_ip(str(ipv4))
         if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
             return False
         # Block cloud metadata addresses like 169.254.169.254

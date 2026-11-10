@@ -25,16 +25,36 @@ def _env_list(name, default=None, sep=','):
     return [s.strip() for s in val.split(sep) if s.strip()]
 
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fallback-change-me')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-fallback-change-me'
+else:
+    SECRET_KEY = SECRET_KEY.strip()
 
-DEBUG = _env_bool('DJANGO_DEBUG', False)
+DEBUG = _env_bool('DJANGO_DEBUG', _env_bool('DEBUG', False))
 
-if not DEBUG and SECRET_KEY == 'django-insecure-fallback-change-me':
+if not DEBUG and (not SECRET_KEY or SECRET_KEY.startswith('django-insecure-')):
     from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in production environments.")
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY must be set in production environments. "
+        "Please configure DJANGO_SECRET_KEY (or SECRET_KEY) in your Vercel Project Environment Variables."
+    )
 
-ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
-CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS', [])
+raw_allowed_hosts = _env_list('DJANGO_ALLOWED_HOSTS') or _env_list('ALLOWED_HOSTS')
+if raw_allowed_hosts:
+    ALLOWED_HOSTS = list(raw_allowed_hosts)
+    if not DEBUG and '.vercel.app' not in ALLOWED_HOSTS and not any(h.endswith('.vercel.app') for h in ALLOWED_HOSTS):
+        ALLOWED_HOSTS.append('.vercel.app')
+else:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
+
+raw_csrf_origins = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS') or _env_list('CSRF_TRUSTED_ORIGINS')
+if raw_csrf_origins:
+    CSRF_TRUSTED_ORIGINS = list(raw_csrf_origins)
+    if not DEBUG and 'https://*.vercel.app' not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append('https://*.vercel.app')
+else:
+    CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 
 
 INSTALLED_APPS = [
@@ -82,32 +102,35 @@ TEMPLATES = [
 WSGI_APPLICATION = 'api_testing_tool.wsgi.application'
 
 
-if os.getenv('DATABASE_URL'):
+db_url = os.getenv('DATABASE_URL') or os.getenv('POSTGRES_URL')
+if db_url:
     import dj_database_url
+    ssl_require = _env_bool('DB_SSL_REQUIRE', not DEBUG)
     DATABASES = {
-        'default': dj_database_url.parse(os.getenv('DATABASE_URL'), conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.parse(db_url, conn_max_age=600, ssl_require=ssl_require)
     }
 elif os.getenv('DB_NAME') and os.getenv('DB_USER') and os.getenv('DB_PASSWORD'):
+    db_options = {}
+    if os.getenv('DB_SSLMODE'):
+        db_options['sslmode'] = os.getenv('DB_SSLMODE')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME'),
             'USER': os.getenv('DB_USER'),
             'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST', ''),
-            'PORT': os.getenv('DB_PORT', ''),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': db_options,
         }
     }
-elif not DEBUG:
-    from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured("Database configuration missing. You must provide DATABASE_URL or DB_NAME/DB_USER/DB_PASSWORD in production.")
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        "PostgreSQL database configuration missing. SQLite has been removed. "
+        "You must configure DATABASE_URL or DB_NAME, DB_USER, and DB_PASSWORD environment variables."
+    )
+
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -125,6 +148,7 @@ USE_TZ = True
 
 # Production Security Headers & Cookies
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
