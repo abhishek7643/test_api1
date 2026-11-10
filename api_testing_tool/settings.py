@@ -25,20 +25,38 @@ def _env_list(name, default=None, sep=','):
     return [s.strip() for s in val.split(sep) if s.strip()]
 
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    SECRET_KEY = 'django-insecure-fallback-change-me'
+raw_secret = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
+if raw_secret:
+    SECRET_KEY = raw_secret.strip().strip('\'"')
 else:
-    SECRET_KEY = SECRET_KEY.strip()
+    SECRET_KEY = ''
 
 DEBUG = _env_bool('DJANGO_DEBUG', _env_bool('DEBUG', False))
 
-if not DEBUG and (not SECRET_KEY or SECRET_KEY.startswith('django-insecure-')):
-    from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured(
-        "DJANGO_SECRET_KEY must be set in production environments. "
-        "Please configure DJANGO_SECRET_KEY (or SECRET_KEY) in your Vercel Project Environment Variables."
-    )
+if not DEBUG:
+    if not SECRET_KEY:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY environment variable is missing in production. "
+            "Please configure DJANGO_SECRET_KEY in your Vercel Project Settings > Environment Variables, "
+            "and then trigger a Redeploy in the Vercel Deployments tab."
+        )
+    if SECRET_KEY.startswith('django-insecure-') or SECRET_KEY in (
+        'django-insecure-fallback-change-me',
+        'change-me-to-a-long-random-string',
+        'your_private_generated_secret_key',
+    ):
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "Insecure DJANGO_SECRET_KEY detected in production. "
+            "Your secret key in Vercel currently begins with 'django-insecure-' or matches a default placeholder. "
+            "In production, you must use a private, secure random secret key (do NOT prefix it with 'django-insecure-'). "
+            "Generate one using: python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\" "
+            "and update DJANGO_SECRET_KEY in both your Vercel Environment Variables and your local .env file."
+        )
+else:
+    if not SECRET_KEY:
+        SECRET_KEY = 'django-insecure-fallback-change-me'
 
 raw_allowed_hosts = _env_list('DJANGO_ALLOWED_HOSTS') or _env_list('ALLOWED_HOSTS')
 if raw_allowed_hosts:
@@ -102,8 +120,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'api_testing_tool.wsgi.application'
 
 
-db_url = os.getenv('DATABASE_URL') or os.getenv('POSTGRES_URL')
-if db_url:
+raw_db_url = os.getenv('DATABASE_URL') or os.getenv('POSTGRES_URL')
+if raw_db_url:
+    db_url = raw_db_url.strip().strip('\'"')
+    if db_url.startswith(':'):
+        db_url = db_url[1:]
+    if db_url.startswith('postgres//'):
+        db_url = 'postgres://' + db_url[10:]
+    elif db_url.startswith('postgresql//'):
+        db_url = 'postgresql://' + db_url[12:]
     import dj_database_url
     ssl_require = _env_bool('DB_SSL_REQUIRE', not DEBUG)
     DATABASES = {
@@ -158,6 +183,7 @@ if not DEBUG:
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
